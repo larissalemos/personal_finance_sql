@@ -1,6 +1,6 @@
 INSERT INTO "institutions" ("id", "name", "type") VALUES
-(1, 'Nubank', 'Banks'),
-(2, 'XP', 'Investment Companies');
+(1, 'Nubank', 'Bank'),
+(2, 'XP', 'Investment Company');
 
 INSERT INTO "accounts" ("id", "institution_id", "name", "type", "currency") VALUES
 (1, 1, 'Checking', 'Checking', 'BRL'),

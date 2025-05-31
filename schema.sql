@@ -2,7 +2,7 @@
 CREATE TABLE "institutions" (
     "id" INTEGER PRIMARY KEY,
     "name" TEXT NOT NULL,
-    "type" TEXT NOT NULL CHECK (type IN ('Banks', 'Credit Unions', 'Insurance Companies', 'Investment Companies'))
+    "type" TEXT NOT NULL CHECK (type IN ('Bank', 'Credit Union', 'Insurance Company', 'Investment Company'))
 );
 
 -- Bank accounts
@@ -63,7 +63,7 @@ CREATE TABLE "investments" (
     "account_id" INTEGER NOT NULL,
     "asset_name" TEXT NOT NULL,
     "asset_type" TEXT NOT NULL, -- Cash and cash equivalents, Fixed income, Equities, Commodities
-    "current_value" REAL,
+    "current_value" REAL, -- Current value of the investment
     "current_quantity" REAL,
     FOREIGN KEY ("account_id") REFERENCES "accounts"("id")
 );
@@ -90,6 +90,7 @@ CREATE TABLE "budgets" (
     FOREIGN KEY ("category_id") REFERENCES "categories"("id")
 );
 
+-- Update current value of investments after transactions
 CREATE TRIGGER "update_current_quantity_after_transaction"
 AFTER INSERT ON "investment_transactions"
 FOR EACH ROW
@@ -105,6 +106,7 @@ BEGIN
     WHERE "id" = NEW."investment_id" AND NEW."type" = 'sell';
 END;
 
+-- Prevent negative quantity in investment transactions
 CREATE TRIGGER "prevent_negative_quantity"
 BEFORE INSERT ON "investment_transactions"
 FOR EACH ROW
@@ -116,4 +118,49 @@ BEGIN
             WHEN (SELECT "current_quantity" FROM "investments" WHERE "id" = NEW."investment_id") < NEW."quantity"
             THEN RAISE(ABORT, 'Venda excede a quantidade disponível')
         END;
+END;
+
+-- Prevent zero amounts in transactions
+CREATE TRIGGER "prevent_zero_transaction"
+BEFORE INSERT ON "transactions"
+FOR EACH ROW
+WHEN NEW."amount" = 0
+BEGIN
+    SELECT
+        RAISE(ABORT, 'Transaction amount must be non-zero');
+END;
+
+-- Prevent zero amounts in credit card charges
+CREATE TRIGGER "prevent_zero_credit_card_charge"
+BEFORE INSERT ON "credit_card_charges"
+FOR EACH ROW
+WHEN NEW."amount" = 0
+BEGIN
+    SELECT
+        RAISE(ABORT, 'Credit card charge amount must be non-zero');
+END;
+
+-- Prevent zero amounts in investment transactions
+CREATE TRIGGER "prevent_zero_investment_transaction"
+BEFORE INSERT ON "investment_transactions"
+FOR EACH ROW
+WHEN NEW."amount" = 0
+BEGIN
+    SELECT
+        RAISE(ABORT, 'Investment transaction amount must be non-zero');
+END;
+
+-- Verify credit card charges do not exceed the credit card limit
+CREATE TRIGGER "prevent_credit_limit_exceeded"
+BEFORE INSERT ON "credit_card_charges"
+FOR EACH ROW
+WHEN (
+    SELECT SUM("amount") FROM "credit_card_charges"
+    WHERE "credit_card_id" = NEW."credit_card_id"
+) + NEW."amount" > (
+    SELECT "limit" FROM "credit_cards" WHERE "id" = NEW."credit_card_id"
+)
+BEGIN
+    SELECT
+        RAISE(ABORT, 'Credit card charge exceeds the credit limit');
 END;

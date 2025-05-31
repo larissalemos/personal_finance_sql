@@ -1,45 +1,37 @@
-# Design Document
+# <center>Design Document - Final Project CS50 - SQL
+# <center>Personal Finance Tracker with SQLite
 
 By LARISSA LEMOS
+Github username: larissalemos
+From: Uberlandia/Brazil
 
-Video overview: <URL HERE>
+Video overview: <[URL HERE](https://www.youtube.com/watch?v=iAW12PBEWBU)>
 
 ## Scope
 
-In this section you should answer the following questions:
+The "personal_finance" database stores data about personal expenditures, income and investments with the purpose of centralizing information from various accounts and institutions, facilitating the process of controlling one's financial life.
 
-* What is the purpose of your database?
-* Which people, places, things, etc. are you including in the scope of your database?
-* Which people, places, things, etc. are *outside* the scope of your database?
-
-The "personal_finance" database stores data about personal expenditures, incomes and investments with the purpose of centralizing information from various accounts and institutions, facilitating the process of controling one's financial life.
-
-This database can be used by anyone who wants to set monthly budgets per month and per category of expediture and easily visualizing whether this goal was met or not.
+This database can be used by anyone who wants to set monthly budgets per month and per category of expediture and easily visualize whether this goal was met or not. It can also be useful for following up investment's rentability.
 
 It includes 9 tables, according to below:
 - Institutions, including basic information about the financial institutions to which the user has any kind of relationship
 - Accounts, including basic identifying information about the account and its type
-- Credit Cards, including by which institution the card was issued by and its limit
-- Credit Cards Charges, including date, category and other informations about the charges
+- Credit Cards, including which institution the card was issued by and its limit
+- Credit Card Charges, including date, category, and other information about the charges
 - Transactions, including information about the incoming and outcoming transactions in each account
 - Investments, including information about the types of assets to help monitoring the rentability of each type
-- Investments Transactions, including detailed informations about each transaction related to the assets
+- Investments Transactions, including detailed information about each transaction related to the assets
 - Categories, including information about the defined categories of interest of the user
 - Budgets, including the budget by category and month to facilitate identifying whether the user is spending more or less than once intended
 
 ## Functional Requirements
 
-In this section you should answer the following questions:
-
-* What should a user be able to do with your database?
-* What's beyond the scope of what a user should be able to do with your database?
-
 With this database, the user may:
 
-- Visualize the amount or average of their expenditures per periods of time and pre defined categories
-- Compare the expenditures to the pre defined budget per periods of time and categories
-- Adjust their budget according to previous months analysis
-- Compare expenditures and incomes
+- Calculate the total of their expenditures over time and by pre defined categories;
+- Calculate the total income over time;
+- Compare the expenditures to the pre defined budget per period of time and category;
+- Compare expenditures and income;
 - Monitor the results of their investments per periods of time and type of investments
 
 ## Representation
@@ -47,13 +39,6 @@ With this database, the user may:
 Entities are captured in SQLite tables with the following schema.
 
 ### Entities
-
-In this section you should answer the following questions:
-
-* Which entities will you choose to represent in your database?
-* What attributes will those entities have?
-* Why did you choose the types you did?
-* Why did you choose the constraints you did?
 
 The database includes the following entities:
 
@@ -77,7 +62,7 @@ The database includes the following entities:
 | Entity       | Type    | Constraints               | Description                   | Comments                     |
 |--------------|---------|---------------------------|-------------------------------|------------------------------|
 | id           | INTEGER | PRIMARY KEY               | Unique category identifier    |                              |
-| name         | TEXT    | NOT NULL, UNIQUE          | Category name that refers to spendings  | Prevent duplicates           |
+| name         | TEXT    | NOT NULL, UNIQUE          | Category name that refers to spendings  | Prevent duplicates. User defined.       |
 | description  | TEXT    |                           | Detailed description          | Optional field               |
 
 #### 4. Table: `transactions`
@@ -107,7 +92,7 @@ The database includes the following entities:
 | credit_card_id | INTEGER | NOT NULL, FOREIGN KEY                | Linked credit card              | References credit_cards(id)  |
 | date           | DATE    | NOT NULL                             | Charge date                     |                              |
 | description    | TEXT    |                                      | Charge description              | Optional                     |
-| amount         | REAL    | NOT NULL                             | Charge amount                   | Always positive              |
+| amount         | INTEGER    | NOT NULL                             | Charge amount                   | Always positive              |
 | category_id    | INTEGER | NOT NULL, FOREIGN KEY                | Spending category               | References categories(id)    |
 
 #### 7. Table: `investments`
@@ -140,18 +125,53 @@ The database includes the following entities:
 | category_id  | INTEGER | NOT NULL, FOREIGN KEY                | Budget category                 | References categories(id)    |
 | amount       | REAL    | NOT NULL                             | Budgeted amount                 |                              |
 
-#### Triggers
-
-#### 1. Trigger: `update_current_quantity_after_transaction`
+### Triggers
+#### 1. `update_current_quantity_after_transaction`
 - **When**: After a new line is inserted on investment_transactions
 - **Action**: Updates investment quantity automatically after trades on investments
 - **Purpose**: Maintains accurate quantity for each asset
 
-#### 2. Trigger: `prevent_negative_quantity`
+#### 2. `prevent_negative_quantity`
 - **When**: Before a new line is inserted on investment_transactions
-- **Condition**: When type is equal to 'sell'
-- **Action**: Blocks transactions that would result in negative holdings
+- **Condition**: Before inserting a row where type = `sell`
+- **Action**: Abort the transaction if the resulting quantity would be negative
 - **Purpose**: Ensures data integrity
+
+#### 3. `prevent_zero_transaction`
+When: Before inserting a new row into the transactions table.
+
+Condition: The trigger checks if the amount of the new transaction is equal to zero.
+
+Action: If the amount is zero, the transaction is aborted and an error message is raised.
+
+Purpose: This ensures data integrity by preventing transactions with no financial impact, which could indicate user error or unnecessary clutter in the dataset.
+
+#### 4. `prevent_zero_credit_card_charge`
+When: Before inserting a new row into the credit_card_charges table.
+
+Condition: The trigger checks if the amount of the new credit card charge is equal to zero.
+
+Action: If the amount is zero, the insertion is aborted and an error message is raised.
+
+Purpose: This prevents invalid credit card charges that could cause confusion in reporting or inconsistencies in tracking card usage.
+
+#### 5. `prevent_zero_investment_transaction`
+When: Before inserting a new row into the investment_transactions table.
+
+Condition: The trigger checks if the amount of the investment transaction is equal to zero.
+
+Action: If the amount is zero, the insertion is aborted with an error message.
+
+Purpose: This avoids the creation of meaningless investment transactions, which could interfere with performance tracking and portfolio analysis.
+
+#### 6. `prevent_credit_limit_exceeded`
+When: Before inserting a new row into the credit_card_charges table.
+
+Condition: The trigger calculates the current total charges for the card and adds the new charge. If this sum exceeds the credit limit set in the credit_cards table for the given card, the condition is met.
+
+Action: The transaction is aborted and an error message is raised, preventing the charge from being recorded.
+
+Purpose: This enforces a business rule that protects against overspending beyond the credit limit, ensuring accurate and realistic modeling of financial constraints.
 
 ### Relationships
 
@@ -161,22 +181,35 @@ The below entity relationship diagram describes the relationships among the enti
 
 As detailed in the diagram:
 
-- The table institutions connects to 3 other tables. One institution can issue 0 to many credit cards, can have 0 to many accounts and can process 0 to many transactions. Each of these 3, have to be connected to one and only one institution.
-- The accounts performs 0 to many transactions and holds 0 to many investments. The user can have an account that has not been used yet. But each investment and transaction have to be connected to one and only one account.
+- The table institutions connects to three other tables. One institution can issue zero to many credit cards, can have zero to many accounts and can process zero to many transactions. Each of these three, must be connected to one and only one institution.
+- The accounts performs zero to many transactions and holds zero to many investments. The user can have an account that has not been used yet. But each investment and transaction have to be connected to one and only one account.
 - The investments record 1 to many investment transactions. An investment will only appear on the investments table if there is or was a transaction refered to that asset.
-- Each credit card contains 0 to many credit card charges. Each charge have to be connected to one and only one credit card.
-- The table categories is defined by the user. It can classify 0 to many transactions, credit card charges and budgets. But each of these 3 can only be connected to one and only one category.
+- Each credit card contains zero to many credit card charges. Each charge have to be connected to one and only one credit card.
+- The table categories is defined by the user. It can classify zero to many transactions, credit card charges and budgets. But each of these three must be connected to one and only one category.
 - The table budget is also defined by the user. It is only connected to categories.
 
 ## Optimizations
 
-In this section you should answer the following questions:
+With the purpose of optimizing the queries, indexes and views where created.
 
-* Which optimizations (e.g., indexes, views) did you create? Why?
+### Views
+
+#### 1. `total_spent`:
+This view unifies all credit card transactions and negative direct transactions from all accounts, unifying all expenditures.
+
+#### 2. `monthly_spending_per_category`:
+This view groups all expenditures per month and category. 
 
 ## Limitations
 
-In this section you should answer the following questions:
+This database was designed for educational purposes and focuses on a simplified model of personal finance. As such, it has some limitations:
 
-* What are the limitations of your design?
-* What might your database not be able to represent very well?
+- **No support for multiple users**: The current schema assumes data for only one user and does not include authentication or user-specific data segregation.
+
+- **No currency handling**: All financial values are assumed to be in the same currency. There's no mechanism for tracking or converting multiple currencies.
+
+- **No historical price tracking for assets**: Asset values are considered static at the time of transaction. There’s no way to analyze portfolio value over time based on market fluctuations.
+
+- **No automation or integration**: The database does not connect to external sources (e.g., banks or stock markets) and requires manual data input.
+
+These limitations could be addressed in future versions by expanding the schema, introducing user management, and integrating APIs for real-time financial data.
