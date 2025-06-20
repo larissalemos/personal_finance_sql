@@ -5,7 +5,7 @@ By LARISSA LEMOS
 Github username: larissalemos
 From: Uberlandia/Brazil
 
-<[Video overview:](https://www.youtube.com/watch?v=iAW12PBEWBU)>
+**[Video overview](https://www.youtube.com/watch?v=iAW12PBEWBU)**
 
 ## Scope
 
