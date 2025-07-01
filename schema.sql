@@ -28,7 +28,7 @@ CREATE TABLE "transactions" (
     "category_id" INTEGER NOT NULL,
     "date"  DATE NOT NULL,
     "description" TEXT,
-    "amount" REAL NOT NULL,
+    "amount" INTEGER NOT NULL,
     "is_recurring" BOOLEAN,
     FOREIGN KEY ("account_id") REFERENCES "accounts"("id"),
     FOREIGN KEY ("category_id") REFERENCES "categories"("id")
@@ -50,7 +50,7 @@ CREATE TABLE "credit_card_charges" (
     "credit_card_id" INTEGER NOT NULL,
     "date" DATE NOT NULL,
     "description" TEXT,
-    "amount" REAL NOT NULL,
+    "amount" INTEGER NOT NULL,
     "category_id" INTEGER NOT NULL,
     FOREIGN KEY ("credit_card_id") REFERENCES "credit_cards"("id"),
     FOREIGN KEY ("category_id") REFERENCES "categories"("id")
@@ -63,8 +63,8 @@ CREATE TABLE "investments" (
     "account_id" INTEGER NOT NULL,
     "asset_name" TEXT NOT NULL,
     "asset_type" TEXT NOT NULL, -- Cash and cash equivalents, Fixed income, Equities, Commodities
-    "current_value" REAL, -- Current value of the investment
-    "current_quantity" REAL,
+    "current_value" INTEGER, -- Current value of the investment
+    "current_quantity" INTEGER,
     FOREIGN KEY ("account_id") REFERENCES "accounts"("id")
 );
 
@@ -74,9 +74,9 @@ CREATE TABLE "investment_transactions" (
     "investment_id" INTEGER NOT NULL,
     "date" DATE NOT NULL,
     "type" TEXT NOT NULL, -- sell, purchase...
-    "amount" REAL NOT NULL,
-    "unit_price" REAL,
-    "quantity" REAL,
+    "amount" INTEGER NOT NULL,
+    "unit_price" INTEGER,
+    "quantity" INTEGER,
     FOREIGN KEY ("investment_id") REFERENCES "investments"("id")
 );
 
@@ -86,7 +86,7 @@ CREATE TABLE "budgets" (
     "year" INTEGER NOT NULL CHECK (length("year") = 4),
     "month" INTEGER NOT NULL CHECK ("month" > 0 AND "month" < 13),
     "category_id" INTEGER NOT NULL,
-    "amount" REAL NOT NULL,
+    "amount" INTEGER NOT NULL,
     FOREIGN KEY ("category_id") REFERENCES "categories"("id")
 );
 
